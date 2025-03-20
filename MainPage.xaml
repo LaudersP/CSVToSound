@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CSVToSound.MainPage"
+             BackgroundColor="{StaticResource PrimaryColor}">
+
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,0"
+            Spacing="25">
+
+            <Label
+                Text="CSVToSound"
+                Style="{StaticResource Headline}"
+                SemanticProperties.HeadingLevel="Level1" 
+            />
+
+            <StackLayout Orientation="Horizontal" Spacing="10" HorizontalOptions="Center">
+                <Label
+                    Text="Port Number: "
+                    Style="{StaticResource SubHeadline}"
+                    SemanticProperties.HeadingLevel="Level2" 
+                    VerticalOptions="Center"
+                />
+
+                <Entry
+                    x:Name="PortNum"
+                    Text="55555"
+                    Keyboard="Numeric"
+                    MaxLength="5"
+                    WidthRequest="62"
+                    VerticalOptions="Center"
+                    BackgroundColor="{StaticResource AccentColor}"
+                />
+            </StackLayout>
+
+            <Button 
+                x:Name="SelectFileBtn"
+                BackgroundColor="{StaticResource SecondaryColor}"
+                Text="Select File"    
+                TextColor="White"
+                SemanticProperties.Hint="Opens file explorer for selecting file"
+                Clicked="OnSelectFileClicked"
+                HorizontalOptions="Center"
+            />
+
+            <Label 
+                x:Name="FileInfoLabel"
+                Text="No File Selected!"
+                FontSize="16"
+                Style="{StaticResource SubHeadline}"
+                SemanticProperties.HeadingLevel="Level2"
+                VerticalOptions="Center"
+            />
+
+            <Button 
+                x:Name="SendBtn"
+                BackgroundColor="Green"
+                Text="Send Data"
+                TextColor="White"
+                SemanticProperties.Hint ="Sends data over OSC when pressed"
+                Clicked="OnSendClicked"
+                HorizontalOptions="Center"
+                IsEnabled="False"
+            />
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
