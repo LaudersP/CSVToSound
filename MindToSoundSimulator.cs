@@ -15,7 +15,7 @@ namespace CSVToSound
         private bool _transmission;
 
         // Constructor
-        public MindToSoundSimulator(string csvFilePath, string ipAddress, int portNum)
+        public MindToSoundSimulator(string csvFilePath, string ipAddress, int portNum, IMessageService? messageService = null)
         {
             _csvFilePath = csvFilePath;
             _index = 0;
@@ -30,7 +30,7 @@ namespace CSVToSound
             }
 
             _transmissionDelay = CalculateTransmissionDelay();
-            _oscTransmitter = new OSC(ipAddress, portNum);
+            _oscTransmitter = new OSC(ipAddress, portNum, messageService);
         }
 
         // Getter for the CSV file row count
