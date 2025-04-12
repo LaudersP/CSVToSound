@@ -63,7 +63,77 @@
                 HorizontalOptions="Center"
                 IsEnabled="False"
             />
+
+            <Label 
+                x:Name="StateLabel"
+                Text="State Playback"
+                FontSize="16"
+                Style="{StaticResource SubHeadline}"
+                SemanticProperties.HeadingLevel="Level2"
+                VerticalOptions="Center"
+            />
+
+            <HorizontalStackLayout
+                Spacing="25"
+                VerticalOptions="Center"
+                HorizontalOptions="Center"
+            >
+                <Button
+                    x:Name="BaselineBtn"
+                    Text="Baseline"
+                    BackgroundColor="{StaticResource SecondaryColor}"
+                    TextColor="White"
+                    Clicked="OnBaselineBtnClicked"
+                    HorizontalOptions="Center"
+                    IsEnabled="False"
+                />
+
+                <Button
+                    x:Name="TransitionToThBtn"
+                    Text="Transistion to Transient Hypofrontalitiy"
+                    BackgroundColor="{StaticResource SecondaryColor}"
+                    TextColor="White"
+                    Clicked="OnTransitionToThBtnClicked"
+                    HorizontalOptions="Center"
+                    IsEnabled="False"
+                />
+            </HorizontalStackLayout>
+
+            <HorizontalStackLayout
+                Spacing="25"
+                VerticalOptions="Center"
+                HorizontalOptions="Center"
+            >
+                <Button
+                    x:Name="ThBtn"
+                    Text="Transient Hypofrontalitiy"
+                     BackgroundColor="{StaticResource SecondaryColor}"
+                    TextColor="White"
+                    Clicked="OnThBtnClicked"
+                    HorizontalOptions="Center"
+                    IsEnabled="False"
+                />
+
+                <Button
+                    x:Name="TransitionToFlowBtn"
+                    Text="Transistion to Flow"
+                    BackgroundColor="{StaticResource SecondaryColor}"
+                    TextColor="White"
+                    Clicked="OnTransitionToFlowBtnClicked"
+                    HorizontalOptions="Center"
+                    IsEnabled="False"
+                />
+
+                <Button
+                    x:Name="FlowBtn"
+                    Text="Flow"
+                    BackgroundColor="{StaticResource SecondaryColor}"
+                    TextColor="White"
+                    Clicked="OnFlowBtnClicked"
+                    HorizontalOptions="Center"
+                    IsEnabled="False"
+                />
+            </HorizontalStackLayout>
         </VerticalStackLayout>
     </ScrollView>
-
 </ContentPage>

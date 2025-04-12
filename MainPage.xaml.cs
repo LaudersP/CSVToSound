@@ -3,7 +3,7 @@ using Microsoft.Maui.Storage;
 
 namespace CSVToSound
 {
-    public partial class MainPage : ContentPage
+    public partial class MainPage : ContentPage, IMessageService
     {
         private static string? _selectedFilePath;
         private static int? _lengthOfCSV;
@@ -21,6 +21,12 @@ namespace CSVToSound
             _sim = null;
         }
 
+        public Task DisplayAlert(string title, string message, string cancel)
+        {
+            return Device.InvokeOnMainThreadAsync(() =>
+                base.DisplayAlert(title, message, cancel));
+        }
+
         private async void OnSelectFileClicked(object sender, EventArgs e)
         {   
             // Create the supported file options
@@ -31,12 +37,16 @@ namespace CSVToSound
                     new Dictionary<DevicePlatform, IEnumerable<string>>
                     {
                         {DevicePlatform.WinUI, new[] {".csv"} },
-                        {DevicePlatform.macOS, new[] {"csv"} }
+                        {DevicePlatform.MacCatalyst, new[] {"csv", "public.comma-separated-values-text"} },
+                        {DevicePlatform.macOS, new[] {"csv", "public.comma-separated-values-text"} }
                     })
             };
 
             // Open the file explorer while limiting to the file options set above
             var result = await FilePicker.PickAsync(options);
+
+            // Disable the send button until file is validated
+            SendBtn.IsEnabled = false;
 
             if (result != null)
             {
@@ -46,10 +56,10 @@ namespace CSVToSound
                 // Reassign the buttons text
                 SelectFileBtn.Text = "Change File";
 
-                // Attempt to create an instance of the simulaton
+                // Attempt to create an instance of the simulation
                 try
                 {
-                    _sim = new MindToSoundSimulator(_selectedFilePath, "127.0.0.1", Convert.ToInt32(PortNum.Text));
+                    _sim = new MindToSoundSimulator(_selectedFilePath, "127.0.0.1", Convert.ToInt32(PortNum.Text), this);
                 }
                 catch (IOException)    // File opened by another process
                 {
@@ -62,18 +72,18 @@ namespace CSVToSound
                 {
                     // Check if the exception is from the constructor
                     // ... due to the file not being long enough
-                    if (ex.Message == "Error: Please select a file with 3+ rows.")
-                    {
-                        FileInfoLabel.TextColor = Colors.Red;
-                        FileInfoLabel.Text = ex.Message;
-                    }
+                    FileInfoLabel.TextColor = Colors.Red;
+                    FileInfoLabel.Text = ex.Message;
 
                     return;
                 }
 
+                // Enable the send button as the file must be valid
+                SendBtn.IsEnabled = true;
+
                 // Display the filename
-                string[] pathParts = _selectedFilePath.Split("\\");
-                FileInfoLabel.Text = "Filename: " + pathParts[pathParts.Length - 1];
+                string filename = Path.GetFileName(_selectedFilePath);
+                FileInfoLabel.Text = "Filename: " + filename;
                 FileInfoLabel.TextColor = Colors.White;
 
                 // Display the length of the file
@@ -103,8 +113,16 @@ namespace CSVToSound
                 // Display the estimated length of the file in HRS:MINS:SECS
                 FileInfoLabel.Text += $"\nEstimated Time: {lengthHours}:{lengthMinutes}:{Convert.ToByte(Double.Round(lengthSeconds, 2))}";
 
-                // Enable the send buttong
+                // Enable the send button
                 SendBtn.IsEnabled = true;
+
+                // Enable the state buttons
+                bool[] buttonEnables = _sim.GetButtonStates();
+                BaselineBtn.IsEnabled = buttonEnables[0];
+                TransitionToThBtn.IsEnabled = buttonEnables[1];
+                ThBtn.IsEnabled = buttonEnables[2];
+                TransitionToFlowBtn.IsEnabled = buttonEnables[3];
+                FlowBtn.IsEnabled = buttonEnables[4];
             }
         }
 
@@ -150,6 +168,10 @@ namespace CSVToSound
 
         private void RestoreSendBtn()
         {
+            // Check that there is a valid simulator object
+            if (_sim == null)
+                return;
+
             // Switch button to status text
             SendBtn.Text = "Stopping Data...";
 
@@ -164,6 +186,67 @@ namespace CSVToSound
             // Reactivate the user inputs
             PortNum.IsEnabled = true;
             SelectFileBtn.IsEnabled = true;
+        }
+
+        // Method for disabling all buttons
+        private void DisableBtn()
+        {
+            PortNum.IsEnabled = false;
+            SelectFileBtn.IsEnabled = false;
+            SendBtn.IsEnabled = false;
+            BaselineBtn.IsEnabled = false;
+            TransitionToThBtn.IsEnabled = false;
+            ThBtn.IsEnabled = false;
+            TransitionToFlowBtn.IsEnabled = false;
+            FlowBtn.IsEnabled = false;
+        }
+
+        // Method for enabling all buttons
+        private void EnableBtn()
+        {
+            PortNum.IsEnabled = true;
+            SelectFileBtn.IsEnabled = true;
+            SendBtn.IsEnabled = true;
+            BaselineBtn.IsEnabled = true;
+            TransitionToThBtn.IsEnabled = true;
+            ThBtn.IsEnabled = true;
+            TransitionToFlowBtn.IsEnabled = true;
+            FlowBtn.IsEnabled = true;
+        }
+
+        public async void OnBaselineBtnClicked(object sender, EventArgs e)
+        {
+            DisableBtn();
+            await _sim.PlaybackState(MindToSoundSimulator.State.Baseline);
+            EnableBtn();
+        }
+
+        public async void OnTransitionToThBtnClicked(object sender, EventArgs e)
+        {
+            DisableBtn();
+            await _sim.PlaybackState(MindToSoundSimulator.State.TransitionToTh);
+            EnableBtn();
+        }
+
+        public async void OnThBtnClicked(object sender, EventArgs e)
+        {
+            DisableBtn();
+            await _sim.PlaybackState(MindToSoundSimulator.State.Th);
+            EnableBtn();
+        }
+
+        public async void OnTransitionToFlowBtnClicked(object sender, EventArgs e)
+        {
+            DisableBtn();
+            await _sim.PlaybackState(MindToSoundSimulator.State.TransitionToFlow);
+            EnableBtn();
+        }
+
+        public async void OnFlowBtnClicked(object sender, EventArgs e)
+        {
+            DisableBtn();
+            await _sim.PlaybackState(MindToSoundSimulator.State.Flow);
+            EnableBtn();
         }
     }
 }
