@@ -14,12 +14,29 @@ namespace CSVToSound
         private readonly string[] _sensors = { "AF3", "F7", "F3", "FC5", "T7", "P7", "O1", "O2", "P8", "T8", "FC6", "F4", "F8", "AF4" };
         private bool _transmission;
 
+        private List<int> _baselineDataIndexs = [];
+        private List<int> _transitionToThDataIndexs = [];
+        private List<int> _thDataIndexs = [];
+        private List<int> _transitionToFlowDataIndexs = [];
+        private List<int> _flowDataIndexs = [];
+        private bool _statesInUse;
+
+        public enum State
+        {
+            Baseline,
+            TransitionToTh,
+            Th,
+            TransitionToFlow,
+            Flow
+        }
+
         // Constructor
         public MindToSoundSimulator(string csvFilePath, string ipAddress, int portNum, IMessageService? messageService = null)
         {
             _csvFilePath = csvFilePath;
             _index = 0;
             _rowCount = GetFileLength();
+            _statesInUse = false;
 
             // Validate the length (3 rows due to calculating the transmission delay)
             // ... Row 1 <Headers>
@@ -31,6 +48,8 @@ namespace CSVToSound
 
             _transmissionDelay = CalculateTransmissionDelay();
             _oscTransmitter = new OSC(ipAddress, portNum, messageService);
+
+            ScrapStates();
         }
 
         // Getter for the CSV file row count
@@ -161,11 +180,12 @@ namespace CSVToSound
             while (line != "EOF" && _transmission);
         }
 
-        public void StopMindToSoundSimulation()
+        // Method for zero-ing out the OSC channels
+        public async Task StopMindToSoundSimulation()
         {
 
             _transmission = false;
-            Thread.Sleep(100);
+            await Task.Delay(100);
 
             // Zero each channel
             foreach(string sensor in _sensors)
@@ -176,8 +196,174 @@ namespace CSVToSound
                     _oscTransmitter.SendMessage($"/{band}/{sensor}", args);
                 }
 
-                Thread.Sleep(Convert.ToInt32(_transmissionDelay * 1000));
+                await Task.Delay(Convert.ToInt32(_transmissionDelay * 1000));
             }
+        }
+
+        // Method for getting the states
+        private void ScrapStates()
+        {
+            // Get the header row
+            _index = 0;
+            string line = GetNextCSVLine();
+            string state;
+            if (line != "EOF")
+            {
+                // Get the data entries
+                string[] dataEntries = BreakupDataRow(line);
+
+                // Get the state
+                state = dataEntries[dataEntries.Length - 1];
+
+                // Check if it is a states column
+                if(state != "State")
+                {
+                    return;
+                }
+                
+                _statesInUse = true;
+            }
+
+            do
+            {
+                // Get a line of data
+                line = GetNextCSVLine();
+                if (line == "EOF")
+                    break;
+
+                // Get the data entries
+                string[] dataEntries = BreakupDataRow(line);
+
+                // Get the state
+                state = dataEntries[dataEntries.Length - 1];
+
+                // Add the line index to the states index list
+                switch (state)
+                {
+                    case "Baseline":
+                        _baselineDataIndexs.Add(_index);
+                        break;
+
+                    case "Transition_to_TH":
+                        _transitionToThDataIndexs.Add(_index);
+                        break;
+
+                    case "Transient_Hypofrontality":
+                        _thDataIndexs.Add(_index);
+                        break;
+
+                    case "Transition_to_Flow":
+                        _transitionToFlowDataIndexs.Add(_index);
+                        break;
+
+                    case "Flow":
+                        _flowDataIndexs.Add(_index);
+                        break;
+
+                    case "MANUAL_REVIEW":
+                        throw new Exception("Error: Manual review of some states required.");
+
+                    default:
+                        throw new Exception("Error: Please process the CSV first.");
+
+                }
+            }
+            while (line != "EOF");
+        }
+
+        // Method to return which buttons can be enabled
+        public bool[] GetButtonStates()
+        {
+            bool baseline = false, transitionTh = false, th = false, trasitionFlow = false, flow = false;
+
+            if (_baselineDataIndexs.Count > 0)
+            {
+                baseline = true;
+            }
+            if (_transitionToThDataIndexs.Count > 0)
+            {
+                transitionTh = true;
+            }
+            if (_thDataIndexs.Count > 0)
+            {
+                th = true;
+            }
+            if (_transitionToFlowDataIndexs.Count > 0)
+            {
+                trasitionFlow = true;
+            }
+            if (_flowDataIndexs.Count > 0)
+            {
+                flow = true;
+            }
+
+            return [baseline, transitionTh, th, trasitionFlow, flow];
+        }
+
+        // Method used to send a certain states data
+        public async Task PlaybackState(State desiredState)
+        {
+            switch (desiredState)
+            {
+                case State.Baseline:
+                    await StateSimulation(_baselineDataIndexs);
+                    break;
+                case State.TransitionToTh:
+                    await StateSimulation(_transitionToThDataIndexs);
+                    break;
+                case State.Th:
+                    await StateSimulation(_thDataIndexs);
+                    break;
+                case State.TransitionToFlow:
+                    await StateSimulation(_transitionToFlowDataIndexs);
+                    break;
+                case State.Flow:
+                    await StateSimulation(_flowDataIndexs);
+                    break;
+            }
+        }
+
+        // Method for sending OSC data for a specific state
+        private async Task StateSimulation(List<int> indexs)
+        {
+            _transmission = true;
+            string line;
+
+            // Iterate through the index list
+            foreach (int index in indexs)
+            {
+                // Set the index
+                _index = index;
+
+                // Get a line of data
+                line = GetNextCSVLine();
+                if (line == "EOF")
+                    break;
+
+                // Get the data entries
+                string[] dataEntries = BreakupDataRow(line);
+
+                // Iterate through the data
+                for (int i = 1; i <= (dataEntries.Length - 2); i++)
+                {
+                    if (i >= dataEntries.Length)
+                        break;
+
+                    // Construct the arguments
+                    float floatValue = Convert.ToSingle(dataEntries[i]);
+                    object[] args = { floatValue };
+
+                    Debug.WriteLine(floatValue);
+
+                    // Send the OSC message
+                    _oscTransmitter.SendMessage(GetOSCAddress(i), args);
+                }
+
+                await Task.Delay(Convert.ToInt32(_transmissionDelay * 1000));
+            }
+
+            // Zero out the OSC channels
+            StopMindToSoundSimulation();
         }
     }
 }

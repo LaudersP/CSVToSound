@@ -72,11 +72,8 @@ namespace CSVToSound
                 {
                     // Check if the exception is from the constructor
                     // ... due to the file not being long enough
-                    if (ex.Message == "Error: Please select a file with 3+ rows.")
-                    {
-                        FileInfoLabel.TextColor = Colors.Red;
-                        FileInfoLabel.Text = ex.Message;
-                    }
+                    FileInfoLabel.TextColor = Colors.Red;
+                    FileInfoLabel.Text = ex.Message;
 
                     return;
                 }
@@ -118,6 +115,14 @@ namespace CSVToSound
 
                 // Enable the send button
                 SendBtn.IsEnabled = true;
+
+                // Enable the state buttons
+                bool[] buttonEnables = _sim.GetButtonStates();
+                BaselineBtn.IsEnabled = buttonEnables[0];
+                TransitionToThBtn.IsEnabled = buttonEnables[1];
+                ThBtn.IsEnabled = buttonEnables[2];
+                TransitionToFlowBtn.IsEnabled = buttonEnables[3];
+                FlowBtn.IsEnabled = buttonEnables[4];
             }
         }
 
@@ -181,6 +186,67 @@ namespace CSVToSound
             // Reactivate the user inputs
             PortNum.IsEnabled = true;
             SelectFileBtn.IsEnabled = true;
+        }
+
+        // Method for disabling all buttons
+        private void DisableBtn()
+        {
+            PortNum.IsEnabled = false;
+            SelectFileBtn.IsEnabled = false;
+            SendBtn.IsEnabled = false;
+            BaselineBtn.IsEnabled = false;
+            TransitionToThBtn.IsEnabled = false;
+            ThBtn.IsEnabled = false;
+            TransitionToFlowBtn.IsEnabled = false;
+            FlowBtn.IsEnabled = false;
+        }
+
+        // Method for enabling all buttons
+        private void EnableBtn()
+        {
+            PortNum.IsEnabled = true;
+            SelectFileBtn.IsEnabled = true;
+            SendBtn.IsEnabled = true;
+            BaselineBtn.IsEnabled = true;
+            TransitionToThBtn.IsEnabled = true;
+            ThBtn.IsEnabled = true;
+            TransitionToFlowBtn.IsEnabled = true;
+            FlowBtn.IsEnabled = true;
+        }
+
+        public async void OnBaselineBtnClicked(object sender, EventArgs e)
+        {
+            DisableBtn();
+            await _sim.PlaybackState(MindToSoundSimulator.State.Baseline);
+            EnableBtn();
+        }
+
+        public async void OnTransitionToThBtnClicked(object sender, EventArgs e)
+        {
+            DisableBtn();
+            await _sim.PlaybackState(MindToSoundSimulator.State.TransitionToTh);
+            EnableBtn();
+        }
+
+        public async void OnThBtnClicked(object sender, EventArgs e)
+        {
+            DisableBtn();
+            await _sim.PlaybackState(MindToSoundSimulator.State.Th);
+            EnableBtn();
+        }
+
+        public async void OnTransitionToFlowBtnClicked(object sender, EventArgs e)
+        {
+            DisableBtn();
+            await _sim.PlaybackState(MindToSoundSimulator.State.TransitionToFlow);
+            EnableBtn();
+        }
+
+        public async void OnFlowBtnClicked(object sender, EventArgs e)
+        {
+            DisableBtn();
+            await _sim.PlaybackState(MindToSoundSimulator.State.Flow);
+            EnableBtn();
         }
     }
 }
