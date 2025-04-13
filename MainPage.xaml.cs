@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Threading.Tasks;
 using Microsoft.Maui.Storage;
 
 namespace CSVToSound
@@ -138,6 +139,13 @@ namespace CSVToSound
                 SelectFileBtn.IsEnabled = false;
                 PortNum.IsEnabled = false;
 
+                // Disable state playback buttons
+                BaselineBtn.IsEnabled = false;
+                TransitionToThBtn.IsEnabled = false;
+                ThBtn.IsEnabled = false;
+                TransitionToFlowBtn.IsEnabled = false;
+                FlowBtn.IsEnabled = false;
+
                 // Change the send button into a stop button
                 SendBtn.Text = "Stop";
                 SendBtn.BackgroundColor = Colors.Red;
@@ -153,7 +161,7 @@ namespace CSVToSound
                 // === BLOCKED UNTIL SIMULATION REACHES THE END OF THE CSV FILE ===
                 
                 if(_sim.GetCSVRowIndex() == _lengthOfCSV)
-                    RestoreSendBtn();
+                    await RestoreSendBtn();
             }
             else    // Stop data
             {
@@ -162,11 +170,11 @@ namespace CSVToSound
                 Thread.Sleep(100);
 
                 // Stop the simulation
-                RestoreSendBtn();
+                await RestoreSendBtn();
             }
         }
 
-        private void RestoreSendBtn()
+        private async Task RestoreSendBtn()
         {
             // Check that there is a valid simulator object
             if (_sim == null)
@@ -176,7 +184,7 @@ namespace CSVToSound
             SendBtn.Text = "Stopping Data...";
 
             // Zero out the OSC channels
-            _sim.StopMindToSoundSimulation();
+            await _sim.StopMindToSoundSimulation();
 
             // Switch the button to send functionality
             SendBtn.Text = "Send Data";
@@ -186,6 +194,13 @@ namespace CSVToSound
             // Reactivate the user inputs
             PortNum.IsEnabled = true;
             SelectFileBtn.IsEnabled = true;
+
+            // Reactivate state playback buttons
+            BaselineBtn.IsEnabled = true;
+            TransitionToThBtn.IsEnabled = true;
+            ThBtn.IsEnabled = true;
+            TransitionToFlowBtn.IsEnabled = true;
+            FlowBtn.IsEnabled = true;
         }
 
         // Method for disabling all buttons

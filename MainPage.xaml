@@ -90,7 +90,7 @@
 
                 <Button
                     x:Name="TransitionToThBtn"
-                    Text="Transistion to Transient Hypofrontalitiy"
+                    Text="Transition to Transient Hypofrontality"
                     BackgroundColor="{StaticResource SecondaryColor}"
                     TextColor="White"
                     Clicked="OnTransitionToThBtnClicked"
@@ -106,7 +106,7 @@
             >
                 <Button
                     x:Name="ThBtn"
-                    Text="Transient Hypofrontalitiy"
+                    Text="Transient Hypofrontality"
                      BackgroundColor="{StaticResource SecondaryColor}"
                     TextColor="White"
                     Clicked="OnThBtnClicked"
@@ -116,7 +116,7 @@
 
                 <Button
                     x:Name="TransitionToFlowBtn"
-                    Text="Transistion to Flow"
+                    Text="Transition to Flow"
                     BackgroundColor="{StaticResource SecondaryColor}"
                     TextColor="White"
                     Clicked="OnTransitionToFlowBtnClicked"
