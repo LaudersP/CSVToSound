@@ -162,7 +162,7 @@ namespace CSVToSound
                 string[] dataEntries = BreakupDataRow(line);
 
                 // Iterate through the data
-                for(int i = 1; i <= (dataEntries.Length - 1); i++)
+                for(int i = 1; i <= (dataEntries.Length - 2); i++)
                 {
                     if(i >= dataEntries.Length)
                         break;
@@ -353,8 +353,6 @@ namespace CSVToSound
                     float floatValue = Convert.ToSingle(dataEntries[i]);
                     object[] args = { floatValue };
 
-                    Debug.WriteLine(floatValue);
-
                     // Send the OSC message
                     _oscTransmitter.SendMessage(GetOSCAddress(i), args);
                 }
@@ -363,7 +361,7 @@ namespace CSVToSound
             }
 
             // Zero out the OSC channels
-            StopMindToSoundSimulation();
+            await StopMindToSoundSimulation();
         }
     }
 }
